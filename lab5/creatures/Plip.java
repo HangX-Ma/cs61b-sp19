@@ -10,6 +10,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Map;
 
+import static huglife.HugLifeUtils.randomEntry;
+
 /**
  * An implementation of a motile pacifist photosynthesizer.
  *
@@ -20,7 +22,7 @@ public class Plip extends Creature {
     /**
      * red color.
      */
-    private int r;
+    private final int r;
     /**
      * green color.
      */
@@ -28,16 +30,16 @@ public class Plip extends Creature {
     /**
      * blue color.
      */
-    private int b;
+    private final int b;
 
     /**
      * creates plip with energy equal to E.
      */
     public Plip(double e) {
         super("plip");
-        r = 0;
-        g = 0;
-        b = 0;
+        r = 99;
+        g = (int)(96 * e) + 63;
+        b = 76;
         energy = e;
     }
 
@@ -57,7 +59,7 @@ public class Plip extends Creature {
      * that you get this exactly correct.
      */
     public Color color() {
-        g = 63;
+        g = (int)(96 * energy) + 63;
         return color(r, g, b);
     }
 
@@ -69,12 +71,12 @@ public class Plip extends Creature {
     }
 
     /**
-     * Plips should lose 0.15 units of energy when moving. If you want to
+     * Plips should lose 0.15 units of energy when moving. If you want
      * to avoid the magic number warning, you'll need to make a
      * private static final variable. This is not required for this lab.
      */
     public void move() {
-        // TODO
+        energy = Math.max(energy - 0.15, 0.0);
     }
 
 
@@ -82,7 +84,7 @@ public class Plip extends Creature {
      * Plips gain 0.2 energy when staying due to photosynthesis.
      */
     public void stay() {
-        // TODO
+        energy = Math.min(energy + 0.2, 2.0);
     }
 
     /**
@@ -91,7 +93,8 @@ public class Plip extends Creature {
      * Plip.
      */
     public Plip replicate() {
-        return this;
+        energy = energy * 0.5;
+        return new Plip(energy);
     }
 
     /**
@@ -111,19 +114,40 @@ public class Plip extends Creature {
         // Rule 1
         Deque<Direction> emptyNeighbors = new ArrayDeque<>();
         boolean anyClorus = false;
-        // TODO
         // (Google: Enhanced for-loop over keys of NEIGHBORS?)
-        // for () {...}
+        for (Map.Entry<Direction, Occupant> neighbor : neighbors.entrySet()) {
+            if (neighbor.getValue().name().equals("empty")) {
+                emptyNeighbors.add(neighbor.getKey());
+            }
+            if (neighbor.getValue().name().equals("clorus")) {
+                anyClorus = true;
+            }
+        }
 
-        if (false) { // FIXME
-            // TODO
+        if (emptyNeighbors.isEmpty()) {
+            return new Action(Action.ActionType.STAY);
         }
 
         // Rule 2
         // HINT: randomEntry(emptyNeighbors)
-
+        if (energy >= 1.0) {
+            return new Action(Action.ActionType.REPLICATE, randomEntry(emptyNeighbors));
+        }
         // Rule 3
-
+        if (anyClorus) {
+            double moveProbability = 0.5;
+            for (Direction dir : emptyNeighbors) {
+                if (dir.equals(Direction.TOP) && Math.random() < moveProbability) {
+                    return new Action(Action.ActionType.MOVE, Direction.TOP);
+                } else if (dir.equals(Direction.BOTTOM) && Math.random() < moveProbability) {
+                    return new Action(Action.ActionType.MOVE, Direction.BOTTOM);
+                } else if (dir.equals(Direction.LEFT) && Math.random() < moveProbability) {
+                    return new Action(Action.ActionType.MOVE, Direction.LEFT);
+                } else if (dir.equals(Direction.RIGHT) && Math.random() < moveProbability) {
+                    return new Action(Action.ActionType.MOVE, Direction.RIGHT);
+                }
+            }
+        }
         // Rule 4
         return new Action(Action.ActionType.STAY);
     }

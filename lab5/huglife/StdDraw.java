@@ -13,7 +13,7 @@ package huglife;
  *  University, who so humbly didn't put his name anywhere in this file
  *  that it felt necessary to give him this award.
  *
- *  Todo
+ *  TodoList
  *  ----
  *    -  Add support for gradient fill, etc.
  *    -  Fix setCanvasSize() so that it can only be called once.
@@ -167,7 +167,7 @@ public final class StdDraw implements ActionListener, MouseListener, MouseMotion
      *
      * @param w the width as a number of pixels
      * @param h the height as a number of pixels
-     * @throws a IllegalArgumentException if the width or height is 0 or negative
+     * @throws IllegalArgumentException if the width or height is 0 or negative
      */
     public static void setCanvasSize(int w, int h) {
         if (w < 1 || h < 1) throw new IllegalArgumentException("width and height must be positive");

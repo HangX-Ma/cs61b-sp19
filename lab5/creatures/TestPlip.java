@@ -10,7 +10,7 @@ import huglife.Impassible;
 import huglife.Empty;
 
 /** Tests the plip class
- *  @authr FIXME
+ *  @author HangX-M
  */
 
 public class TestPlip {
@@ -32,15 +32,26 @@ public class TestPlip {
 
     @Test
     public void testReplicate() {
-        // TODO
+        Plip p = new Plip(2);
+
+        HashMap<Direction, Occupant> surrounded = new HashMap<>();
+        surrounded.put(Direction.TOP, new Impassible());
+        surrounded.put(Direction.BOTTOM, new Impassible());
+        surrounded.put(Direction.LEFT, new Impassible());
+        surrounded.put(Direction.RIGHT, new Empty());
+
+        Action actual = p.chooseAction(surrounded);
+        Action expected = new Action(Action.ActionType.REPLICATE, Direction.RIGHT);
+
+        assertEquals(expected, actual);
     }
 
-    //@Test
+    @Test
     public void testChoose() {
 
         // No empty adjacent spaces; stay.
         Plip p = new Plip(1.2);
-        HashMap<Direction, Occupant> surrounded = new HashMap<Direction, Occupant>();
+        HashMap<Direction, Occupant> surrounded = new HashMap<>();
         surrounded.put(Direction.TOP, new Impassible());
         surrounded.put(Direction.BOTTOM, new Impassible());
         surrounded.put(Direction.LEFT, new Impassible());
@@ -54,7 +65,7 @@ public class TestPlip {
 
         // Energy >= 1; replicate towards an empty space.
         p = new Plip(1.2);
-        HashMap<Direction, Occupant> topEmpty = new HashMap<Direction, Occupant>();
+        HashMap<Direction, Occupant> topEmpty = new HashMap<>();
         topEmpty.put(Direction.TOP, new Empty());
         topEmpty.put(Direction.BOTTOM, new Impassible());
         topEmpty.put(Direction.LEFT, new Impassible());
@@ -68,7 +79,7 @@ public class TestPlip {
 
         // Energy >= 1; replicate towards an empty space.
         p = new Plip(1.2);
-        HashMap<Direction, Occupant> allEmpty = new HashMap<Direction, Occupant>();
+        HashMap<Direction, Occupant> allEmpty = new HashMap<>();
         allEmpty.put(Direction.TOP, new Empty());
         allEmpty.put(Direction.BOTTOM, new Empty());
         allEmpty.put(Direction.LEFT, new Empty());
