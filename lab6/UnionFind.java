@@ -22,12 +22,14 @@ public class UnionFind {
 
     /* Returns the size of the set v1 belongs to. */
     public int sizeOf(int v1) {
+        validate(v1);
         return Math.abs(parent(find(v1)));
     }
 
     /* Returns the parent of v1. If v1 is the root of a tree, returns the
        negative size of the tree for which v1 is the root. */
     public int parent(int v1) {
+        validate(v1);
         return parent[v1];
     }
 
@@ -42,6 +44,8 @@ public class UnionFind {
        vertex with itself or vertices that are already connected should not 
        change the sets but may alter the internal structure of the data. */
     public void union(int v1, int v2) {
+        validate(v1);
+        validate(v2);
         int root1 = find(v1);
         int root2 = find(v2);
         if (root1 == root2) { return; }
@@ -63,14 +67,14 @@ public class UnionFind {
         validate(vertex);
         // find the root
         int vertexOrigin = vertex;
-        while(parent[vertex] > 0) {
+        while(parent[vertex] > -1) {
             vertex = parent[vertex];
         }
         int root = vertex;
 
         // do path compression
         vertex = vertexOrigin;
-        while (parent[vertex] > 0) {
+        while (parent[vertex] > -1) {
             int parentVertex = parent[vertex];
             parent[vertex] = root;
             vertex = parentVertex;
