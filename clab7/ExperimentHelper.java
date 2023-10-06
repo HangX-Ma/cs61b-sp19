@@ -15,7 +15,20 @@ public class ExperimentHelper {
      *  N = 8, OIPL: 13
      */
     public static int optimalIPL(int N) {
-        return 0;
+        int depthLevel = (int)Math.floor((Math.log(N) / Math.log(2)) + 1);
+        int sum = 0;
+        int num = 0;
+        for (int level = 0; level < depthLevel; level++) {
+            int levelNum = (int)Math.pow(2, level);
+            for (int j = 0; j < levelNum; j++) {
+                sum += level;
+                num += 1;
+                if (num >= N) {
+                    break;
+                }
+            }
+        }
+        return sum;
     }
 
     /** Returns the average depth for nodes in an optimal BST of
@@ -24,9 +37,57 @@ public class ExperimentHelper {
      *  N = 1, OAD: 0
      *  N = 5, OAD: 1.2
      *  N = 8, OAD: 1.625
-     * @return
      */
     public static double optimalAverageDepth(int N) {
-        return 0;
+        return (double) optimalIPL(N) / (double) N;
+    }
+
+    // randomly delete an item using asymmetric Hibbard deletion and insert a random item
+    public static void asymmetricDeletionAndInsertion(BST<Integer> bst) {
+        int randomItem;
+        // delete a random item
+        while (true) {
+            randomItem = RandomGenerator.getRandomInt(5000);
+            if (!bst.contains(randomItem)) {
+                continue;
+            }
+            bst.deleteTakingSuccessor(randomItem);
+            break;
+        }
+
+        // insert a random item
+        while (true) {
+            randomItem = RandomGenerator.getRandomInt(5000);
+            if (bst.contains(randomItem)) {
+                continue;
+            }
+            bst.add(randomItem);
+            break;
+        }
+    }
+
+
+    // randomly delete an item using symmetric deletion and insert a random item
+    public static void symmetricDeletionAndInsertion(BST<Integer> bst) {
+        int randomItem;
+        // delete a random item
+        while (true) {
+            randomItem = RandomGenerator.getRandomInt(5000);
+            if (!bst.contains(randomItem)) {
+                continue;
+            }
+            bst.deleteTakingRandom(randomItem);
+            break;
+        }
+
+        // insert a random item
+        while (true) {
+            randomItem = RandomGenerator.getRandomInt(5000);
+            if (bst.contains(randomItem)) {
+                continue;
+            }
+            bst.add(randomItem);
+            break;
+        }
     }
 }

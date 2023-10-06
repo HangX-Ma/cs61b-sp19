@@ -246,4 +246,16 @@ public class BST<Key extends Comparable<Key>> {
     private boolean isEmpty() {
         return size() == 0;
     }
+
+    public double averageDepth() {
+        return internalPathLength(root, 0) / (double) size();
+    }
+
+    private double internalPathLength(Node x, int depth) {
+        if (x == null) {
+            return 0;
+        }
+        return depth + internalPathLength(x.left, depth + 1) + internalPathLength(x.right, depth + 1);
+    }
+
 }
