@@ -3,7 +3,6 @@ package hw3.hash;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
@@ -22,10 +21,21 @@ public class TestSimpleOomage {
 
     @Test
     public void testHashCodePerfect() {
-        /* TODO: Write a test that ensures the hashCode is perfect,
+        /* DONE: Write a test that ensures the hashCode is perfect,
           meaning no two SimpleOomages should EVER have the same
           hashCode UNLESS they have the same red, blue, and green values!
          */
+        HashSet<Integer> uniqueSet = new HashSet<>();
+        for (int r = 5; r < 256; r += 5) {
+            for (int g = 5; g < 256; g += 5) {
+                for (int b = 5; b < 256; b += 5) {
+                    SimpleOomage so = new SimpleOomage(r, g, b);
+                    assertFalse(uniqueSet.contains(so.hashCode()));
+                    uniqueSet.add(so.hashCode());
+                }
+            }
+        }
+
     }
 
     @Test
@@ -39,7 +49,6 @@ public class TestSimpleOomage {
         assertNotEquals(ooA, "ketchup");
     }
 
-    /*
     @Test
     public void testHashCodeAndEqualsConsistency() {
         SimpleOomage ooA = new SimpleOomage(5, 10, 20);
@@ -47,10 +56,10 @@ public class TestSimpleOomage {
         HashSet<SimpleOomage> hashSet = new HashSet<>();
         hashSet.add(ooA);
         assertTrue(hashSet.contains(ooA2));
-    }*/
+    }
 
-    /* TODO: Uncomment this test after you finish haveNiceHashCodeSpread in OomageTestUtility */
-    /*@Test
+    /* DONE: Uncomment this test after you finish haveNiceHashCodeSpread in OomageTestUtility */
+    @Test
     public void testRandomOomagesHashCodeSpread() {
         List<Oomage> oomages = new ArrayList<>();
         int N = 10000;
@@ -60,7 +69,7 @@ public class TestSimpleOomage {
         }
 
         assertTrue(OomageTestUtility.haveNiceHashCodeSpread(oomages, 10));
-    }*/
+    }
 
     /** Calls tests for SimpleOomage. */
     public static void main(String[] args) {
