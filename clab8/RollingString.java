@@ -1,3 +1,6 @@
+import java.util.LinkedList;
+import java.util.Queue;
+
 /**
  * A String-like class that allows users to add and remove characters in the String
  * in constant time and have a constant-time hash function. Used for the Rabin-Karp
@@ -17,13 +20,26 @@ class RollingString{
      */
     static final int PRIMEBASE = 6113;
 
+    private final Queue<Character> rollCharsQueue;
+
+    // generate constant time hash code
+    private final int firstCharUniqueCharsBase;
+    private int hashSum = 0;
+
+
     /**
      * Initializes a RollingString with a current value of String s.
      * s must be the same length as the maximum length.
      */
     public RollingString(String s, int length) {
         assert(s.length() == length);
-        /* FIX ME */
+
+        rollCharsQueue = new LinkedList<>();
+        for (char c : s.toCharArray()) {
+            rollCharsQueue.add(c);
+            hashSum = (hashSum * UNIQUECHARS) + c;
+        }
+        firstCharUniqueCharsBase = (int) Math.pow(UNIQUECHARS, length - 1);
     }
 
     /**
@@ -32,7 +48,9 @@ class RollingString{
      * Should be a constant-time operation.
      */
     public void addChar(char c) {
-        /* FIX ME */
+        hashSum = (hashSum - rollCharsQueue.element() * firstCharUniqueCharsBase) * UNIQUECHARS + c;
+        rollCharsQueue.add(c);
+        rollCharsQueue.poll();
     }
 
 
@@ -43,8 +61,10 @@ class RollingString{
      */
     public String toString() {
         StringBuilder strb = new StringBuilder();
-        /* FIX ME */
-        return "";
+        for (char c : rollCharsQueue) {
+            strb.append(c);
+        }
+        return strb.toString();
     }
 
     /**
@@ -52,8 +72,7 @@ class RollingString{
      * Should be a constant-time operation.
      */
     public int length() {
-        /* FIX ME */
-        return -1;
+        return rollCharsQueue.size();
     }
 
 
@@ -64,8 +83,21 @@ class RollingString{
      */
     @Override
     public boolean equals(Object o) {
-        /* FIX ME */
-        return false;
+        if (o == null) {
+            return false;
+        }
+        if (o == this) {
+            return true;
+        }
+        if (o.getClass() != this.getClass()) {
+            return false;
+        }
+        if (o.hashCode() != this.hashCode()) {
+            return false;
+        }
+
+        RollingString other = (RollingString) o;
+        return other.toString().equals(this.toString());
     }
 
     /**
@@ -74,7 +106,6 @@ class RollingString{
      */
     @Override
     public int hashCode() {
-        /* FIX ME */
-        return -1;
+        return hashSum % PRIMEBASE;
     }
 }
