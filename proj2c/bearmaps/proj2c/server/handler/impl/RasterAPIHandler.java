@@ -17,8 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static bearmaps.proj2c.utils.Constants.SEMANTIC_STREET_GRAPH;
-import static bearmaps.proj2c.utils.Constants.ROUTE_LIST;
+import static bearmaps.proj2c.utils.Constants.*;
 
 /**
  * Handles requests from the web browser for map images. These images
@@ -84,12 +83,93 @@ public class RasterAPIHandler extends APIRouteHandler<Map<String, Double>, Map<S
      */
     @Override
     public Map<String, Object> processRequest(Map<String, Double> requestParams, Response response) {
-        //System.out.println("yo, wanna know the parameters given by the web browser? They are:");
-        //System.out.println(requestParams);
         Map<String, Object> results = new HashMap<>();
-        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
-                + "your browser.");
+        double reqULLon = requestParams.get("ullon");
+        double reqULLat = requestParams.get("ullat");
+        double reqLRLon = requestParams.get("lrlon");
+        double reqLRLat = requestParams.get("lrlat");
+        double reqWidth = requestParams.get("w");
+        double reqHeight = requestParams.get("h");
+        boolean querySuccess = !(reqULLon < ROOT_ULLON)
+                            && !(reqULLat > ROOT_ULLAT)
+                            && !(reqLRLon > ROOT_LRLON)
+                            && !(reqLRLat < ROOT_LRLAT);
+
+        // bound check
+        if (reqLRLon < reqULLon || reqLRLat > reqULLat) {
+            querySuccess = false;
+        }
+        results.put("query_success", querySuccess);
+
+        int depth = calOptimalDepth(reqWidth, reqLRLon, reqULLon);
+        results.put("depth", depth);
+
+        int rasterULLonNum = calRasterParamNum(depth, reqULLon, ROOT_ULLON, ROOT_LRLON, true);
+        double rasterULLonParam = calRasterParam(depth, rasterULLonNum, ROOT_ULLON, ROOT_LRLON, true);
+        results.put("raster_ul_lon", rasterULLonParam );
+
+        int rasterULLatNum = calRasterParamNum(depth, reqULLat, ROOT_ULLAT, ROOT_LRLAT, true);
+        double rasterULLatParam = calRasterParam(depth, rasterULLatNum, ROOT_ULLAT, ROOT_LRLAT, false);
+        results.put("raster_ul_lat", rasterULLatParam );
+
+        int rasterLRLonNum = calRasterParamNum(depth, reqLRLon, ROOT_ULLON, ROOT_LRLON, false);
+        double rasterLRLonParam = calRasterParam(depth, rasterLRLonNum, ROOT_ULLON, ROOT_LRLON, true);
+        results.put("raster_lr_lon", rasterLRLonParam);
+
+        int rasterLRLatNum = calRasterParamNum(depth, reqLRLat, ROOT_ULLAT, ROOT_LRLAT, false);
+        double rasterLRLatParam = calRasterParam(depth, rasterLRLatNum, ROOT_ULLAT, ROOT_LRLAT, false);
+        results.put("raster_lr_lat", rasterLRLatParam );
+
+
+        int rowNum = rasterLRLatNum - rasterULLatNum;
+        int colNum = rasterLRLonNum - rasterULLonNum;
+        String[][] render_grid = new String[rowNum][colNum];
+        for (int row = 0; row < rowNum; row += 1) {
+            for (int col = 0; col < colNum; col += 1) {
+                render_grid[row][col] =
+                        "d" + depth + "_x" + (rasterULLonNum + col) + "_y" + (rasterULLatNum + row) + ".png";
+            }
+        }
+        results.put("render_grid", render_grid);
+
         return results;
+    }
+
+    private int calOptimalDepth(double width, double lrlon, double ullon) {
+        double depthZeroLonDPP = (ROOT_LRLON - ROOT_ULLON) / TILE_SIZE;
+        double requestLonDPP = (lrlon - ullon) / width;
+        // Take the log of base 0.5 to get the optimal depth.
+        // Always round up to fulfill the LonDPP requirement.
+        // NOTE: (2^D - 1) number of images at D depth
+        int optimalDepth = (int) Math.ceil(Math.log(requestLonDPP / depthZeroLonDPP) / Math.log(0.5));
+        if (optimalDepth > 7) {
+            optimalDepth = 7;
+        }
+        return optimalDepth;
+    }
+
+    private int calRasterParamNum(int depth, double reqSize, double rootUL, double rootLR, boolean ULorLR) {
+        int k = (int) Math.pow(2, depth) - 1;
+        double spiltUnit = Math.abs(rootLR - rootUL) / (double) (k + 1);
+        double rasterPicNum = Math.abs(reqSize - rootUL) / spiltUnit;
+        if (ULorLR) {
+            rasterPicNum = Math.floor(rasterPicNum);
+        } else {
+            rasterPicNum = Math.ceil(rasterPicNum);
+        }
+        return (int) Math.min(k, rasterPicNum);
+    }
+
+    private double calRasterParam(int depth, int rasterPicNum, double rootUL, double rootLR, boolean LonOrAlt) {
+        int k = (int) Math.pow(2, depth) - 1;
+        double spiltUnit = Math.abs(rootLR - rootUL) / (double) (k + 1);
+        double param;
+        if (LonOrAlt) {
+            param = rootUL + spiltUnit * rasterPicNum;
+        } else {
+            param = rootUL - spiltUnit * rasterPicNum;
+        }
+        return param;
     }
 
     @Override
