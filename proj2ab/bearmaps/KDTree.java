@@ -3,8 +3,8 @@ package bearmaps;
 import java.util.Collections;
 import java.util.List;
 
-public class KDTree {
-    private final boolean HORIZONTAL = false;
+public class KDTree implements PointSet {
+    private static final boolean HORIZONTAL = false;
     private Node root;
 
     public KDTree(List<Point> points) {
@@ -41,7 +41,7 @@ public class KDTree {
         }
     }
 
-
+    @Override
     public Point nearest(double x, double y) {
         Point goal = new Point(x, y);
         return nearest(root, goal, root.getPoint());
@@ -56,42 +56,37 @@ public class KDTree {
 
         if (Double.compare(nodeDist, bestDist) < 0) {
             best = node.getPoint();
-            bestDist = nodeDist;
         }
+
         Node goodSide;
         Node badSide;
-
         if (comparePoint(goal, node.getPoint(), node.getSpiltDirection()) < 0) {
-            goodSide = node.leftChild;
-            badSide = node.rightChild;
+            goodSide = node.getLeftChild();
+            badSide = node.getRightChild();
         } else {
-            goodSide = node.rightChild;
-            badSide = node.leftChild;
+            goodSide = node.getRightChild();
+            badSide = node.getLeftChild();
         }
         best = nearest(goodSide, goal, best);
-        if (isBadSideWorthChecking(badSide, goal, bestDist)) {
+        if (isBadSideWorthChecking(node, goal, best)) {
             best = nearest(badSide, goal, best);
         }
         return best;
     }
 
-    private boolean isBadSideWorthChecking(Node badNode, Point goal, double bestDist) {
-        double dist;
+    private boolean isBadSideWorthChecking(Node node, Point goal, Point best) {
+        double distToBest = Point.distance(best, goal);
+        double distToBad;
         Point intersectionPoint;
 
-        // No bad node exists
-        if (badNode == null) {
-            return false;
-        }
-
-        if (badNode.spiltDirection == HORIZONTAL) {
-            intersectionPoint = new Point(badNode.getPoint().getX(), goal.getY());
+        if (node.spiltDirection == HORIZONTAL) {
+            intersectionPoint = new Point(node.getPoint().getX(), goal.getY());
         } else {
-            intersectionPoint = new Point(goal.getX(), badNode.getPoint().getY());
+            intersectionPoint = new Point(goal.getX(), node.getPoint().getY());
         }
-        dist = Point.distance(intersectionPoint, goal);
+        distToBad = Point.distance(intersectionPoint, goal);
 
-        return bestDist > dist;
+        return Double.compare(distToBad, distToBest) < 0;
     }
 
     private static class Node {
