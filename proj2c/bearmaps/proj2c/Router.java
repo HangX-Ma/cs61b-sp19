@@ -2,8 +2,10 @@ package bearmaps.proj2c;
 
 import bearmaps.hw4.AStarSolver;
 import bearmaps.hw4.WeightedEdge;
-import bearmaps.hw4.WeirdSolver;
+import bearmaps.proj2ab.Point;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -38,12 +40,98 @@ public class Router {
      * @param g The graph to use.
      * @param route The route to translate into directions. Each element
      *              corresponds to a node from the graph in the route.
-     * @return A list of NavigatiionDirection objects corresponding to the input
+     * @return A list of NavigationDirection objects corresponding to the input
      * route.
      */
     public static List<NavigationDirection> routeDirections(AugmentedStreetMapGraph g, List<Long> route) {
-        /* fill in for part IV */
-        return null;
+        List<NavigationDirection> navDirList = new ArrayList<>();
+        List<WeightedEdge<Long>> ways = getWaysFromRoute(g, route);
+
+        double prevWayDist = 0; // record the previous way distance
+        int prevDirection = NavigationDirection.START;
+        int currDirection;
+
+        double prevBearing;
+        double currBearing;
+
+        /* SPECIAL CASE: Only have two vertexes: start and destination */
+        if (ways.size() == 1) {
+            NavigationDirection navDir = setNavDirection(prevDirection, ways.get(0).getName(), ways.get(0).weight());
+            navDirList.add(navDir);
+            return navDirList;
+        }
+
+
+        for (int i = 1; i < ways.size(); i += 1) {
+            WeightedEdge<Long> prevWay = ways.get(i - 1);
+            WeightedEdge<Long> currWay = ways.get(i);
+
+            Long prevNode = prevWay.from();
+            Long currNode = prevWay.to();
+            Long nextNode = currWay.to();
+
+            Point prevPos = new Point(g.lon(prevNode), g.lat(prevNode));
+            Point currPos = new Point(g.lon(currNode), g.lat(currNode));
+            Point nextPos = new Point(g.lon(nextNode), g.lat(nextNode));
+
+            String prevName = prevWay.getName() == null ? "unknown road" : prevWay.getName();
+            String currName = currWay.getName() == null ? "unknown road" : currWay.getName();
+
+            prevWayDist += prevWay.weight();
+
+            if (!prevName.equals(currName)) {
+                 prevBearing =
+                        NavigationDirection.bearing(prevPos.getX(), prevPos.getY(), currPos.getX(), currPos.getY());
+                currBearing =
+                        NavigationDirection.bearing(currPos.getX(), currPos.getY(), nextPos.getX(), nextPos.getY());
+
+                currDirection = NavigationDirection.getDirection(prevBearing, currBearing);
+
+                NavigationDirection navDir = setNavDirection(prevDirection, prevName, prevWayDist);
+                navDirList.add(navDir);
+
+                // update state
+                prevDirection = currDirection;
+                prevWayDist = 0;
+            }
+
+            // check currWay at the end of the loop
+            if (i == ways.size() - 1) {
+                prevWayDist += currWay.weight();
+                // NOTE: prevDirection has been changed to currDirection
+                NavigationDirection navDir = setNavDirection(prevDirection, currName, prevWayDist);
+                navDirList.add(navDir);
+            }
+        }
+
+        return navDirList;
+    }
+
+    /* Get a new instance of NavigationDirection configured with the given params */
+    private static NavigationDirection setNavDirection(int direction, String way, double distance) {
+        NavigationDirection navDir = new NavigationDirection();
+        navDir.direction = direction;
+        navDir.way = way;
+        navDir.distance = distance;
+        return navDir;
+    }
+
+    /* The route edges list */
+    private static List<WeightedEdge<Long>> getWaysFromRoute(AugmentedStreetMapGraph g, List<Long> route) {
+        List<WeightedEdge<Long>> edges = new LinkedList<>();
+        Long currNodeId;
+        Long nextNodeId;
+        for (int i = 1; i < route.size(); i++) {
+            currNodeId = route.get(i - 1);
+            nextNodeId = route.get(i);
+            List<WeightedEdge<Long>> neighbors = g.neighbors(currNodeId);
+            for (WeightedEdge<Long> neighbor : neighbors) {
+                if (neighbor.to().equals(nextNodeId)) {
+                    edges.add(neighbor);
+                }
+            }
+        }
+        return edges;
     }
 
     /**

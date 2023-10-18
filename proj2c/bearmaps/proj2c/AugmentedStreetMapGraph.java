@@ -1,5 +1,6 @@
 package bearmaps.proj2c;
 
+import bearmaps.lab9.MyTrieSet;
 import bearmaps.hw4.streetmap.Node;
 import bearmaps.hw4.streetmap.StreetMapGraph;
 import bearmaps.proj2ab.Point;
@@ -16,19 +17,39 @@ import java.util.*;
  */
 public class AugmentedStreetMapGraph extends StreetMapGraph {
     Map<Point, Long> pointToID;
-    List<Point> points;
-    List<Node> nodes;
     KDTree kdTree;
+    MyTrieSet trie;
+    Map<String, List<Node>> cleanedNameToNodes;
 
     public AugmentedStreetMapGraph(String dbPath) {
         super(dbPath);
-        // You might find it helpful to uncomment the line below:
-        nodes = this.getNodes();
+
+        List<Node> nodes = this.getNodes();
+        List<Point> points = new ArrayList<>();
+
         pointToID = new HashMap<>();
-        points = new ArrayList<>();
+        trie = new MyTrieSet();
+        cleanedNameToNodes = new HashMap<>();
+
+        List<Node> nodesList;
 
         for (Node node : nodes) {
             long id = node.id();
+            if (node.name() != null) {
+                String cleanedName = cleanString(node.name());
+                trie.add(cleanedName);
+
+                /* Collect the nodes correspond to the cleaned name (N to 1 relationship) */
+                if (!cleanedNameToNodes.containsKey(cleanedName)) {
+                    cleanedNameToNodes.put(cleanedName, new LinkedList<>());
+                }
+                // update the node list
+                nodesList = cleanedNameToNodes.get(cleanedName);
+                nodesList.add(node);
+                cleanedNameToNodes.put(cleanedName, nodesList);
+            }
+
+            /* Only search the nodes with neighbors */
             if (!this.neighbors(id).isEmpty()) {
                 Point point = new Point(node.lon(), node.lat());
 
@@ -63,7 +84,19 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
      * cleaned <code>prefix</code>.
      */
     public List<String> getLocationsByPrefix(String prefix) {
-        return new LinkedList<>();
+        String cleanedPrefix = cleanString(prefix);
+        List<String> matchedNames = trie.keysWithPrefix(cleanedPrefix);
+        List<String> locations = new LinkedList<>();
+
+        for (String name : matchedNames) {
+            for (Node node : cleanedNameToNodes.get(name)) {
+                if (!locations.contains(node.name())) {
+                    locations.add(node.name());
+                }
+            }
+        }
+
+        return locations;
     }
 
     /**
@@ -80,7 +113,18 @@ public class AugmentedStreetMapGraph extends StreetMapGraph {
      * "id" -> Number, The id of the node. <br>
      */
     public List<Map<String, Object>> getLocations(String locationName) {
-        return new LinkedList<>();
+        List<Map<String, Object>> locations = new LinkedList<>();
+        String cleanedLocationName = cleanString(locationName);
+        for (Node node : cleanedNameToNodes.get(cleanedLocationName)) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("lat", node.lat());
+            info.put("lon", node.lon());
+            info.put("name", node.name());
+            info.put("id", node.id());
+            locations.add(info);
+        }
+
+        return locations;
     }
 
 
