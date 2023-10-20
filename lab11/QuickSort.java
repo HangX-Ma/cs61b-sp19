@@ -1,5 +1,6 @@
 import edu.princeton.cs.algs4.Queue;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class QuickSort {
     /**
      * Returns a new queue that contains the given queues catenated together.
@@ -12,7 +13,7 @@ public class QuickSort {
      *            q1 followed by the items of q2.
      */
     private static <Item extends Comparable> Queue<Item> catenate(Queue<Item> q1, Queue<Item> q2) {
-        Queue<Item> catenated = new Queue<Item>();
+        Queue<Item> catenated = new Queue<>();
         for (Item item : q1) {
             catenated.enqueue(item);
         }
@@ -57,7 +58,16 @@ public class QuickSort {
     private static <Item extends Comparable> void partition(
             Queue<Item> unsorted, Item pivot,
             Queue<Item> less, Queue<Item> equal, Queue<Item> greater) {
-        // Your code here!
+        // We use scan method
+        for (Item item : unsorted) {
+            if (item.compareTo(pivot) < 0) {
+                less.enqueue(item);
+            } else if (item.compareTo(pivot) > 0) {
+                greater.enqueue(item);
+            } else {
+                equal.enqueue(item);
+            }
+        }
     }
 
     /**
@@ -66,9 +76,22 @@ public class QuickSort {
      * @param items  A Queue of possibly unsorted items
      * @return       A Queue of sorted items
      */
-    public static <Item extends Comparable> Queue<Item> quickSort(
-            Queue<Item> items) {
-        // Your code here!
-        return items;
+    public static <Item extends Comparable> Queue<Item> quickSort(Queue<Item> items) {
+        Queue<Item> less = new Queue<>();
+        Queue<Item> equal = new Queue<>();
+        Queue<Item> greater = new Queue<>();
+        Item pivot = getRandomItem(items);
+
+        partition(items, pivot, less, equal, greater);
+
+        if (less.size() > 1) {
+            equal = catenate(quickSort(less), equal);
+        }
+
+        if (greater.size() > 1) {
+            equal = catenate(equal, quickSort(greater));
+        }
+
+        return equal;
     }
 }
